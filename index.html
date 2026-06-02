@@ -3,12 +3,10 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
-<title>同传字幕</title>
-
-<!-- 让"添加到主屏幕"后以独立 App 形式打开（iOS） -->
+<title>Sotto</title>
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="同传字幕" />
+<meta name="apple-mobile-web-app-title" content="Sotto" />
 <meta name="theme-color" content="#0a0a0c" />
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -18,25 +16,22 @@
 <style>
   :root {
     --bg: #0a0a0c;
-    --ink: #f4efe6;        /* 译文：暖白，主角 */
-    --ink-dim: #7d786c;    /* 原文：低调灰 */
-    --ghost: #3a3833;      /* 历史行：更淡 */
-    --accent: #e0a05c;     /* 暖琥珀色，活动状态 */
-    --accent-soft: rgba(224, 160, 92, 0.14);
-    --line: rgba(244, 239, 230, 0.08);
+    --ink: #f4efe6;
+    --ink-dim: #7d786c;
+    --ghost: #3a3833;
+    --accent: #e0a05c;
+    --accent-soft: rgba(224,160,92,0.14);
+    --line: rgba(244,239,230,0.08);
     --sans: "Hanken Grotesk", -apple-system, sans-serif;
     --cjk: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
     --display: "Fraunces", Georgia, serif;
   }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-  html, body { height: 100%; overflow: hidden; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { height:100%; overflow:hidden; }
 
   body {
-    background:
-      radial-gradient(120% 80% at 50% -10%, rgba(224,160,92,0.10), transparent 55%),
-      var(--bg);
+    background: radial-gradient(120% 80% at 50% -10%, rgba(224,160,92,.10), transparent 55%), var(--bg);
     color: var(--ink);
     font-family: var(--sans);
     display: flex;
@@ -45,7 +40,7 @@
     padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   }
 
-  /* ---------- 顶栏 ---------- */
+  /* ── 顶栏 ── */
   header {
     display: flex;
     align-items: center;
@@ -53,22 +48,12 @@
     padding: 18px 22px 12px;
     flex-shrink: 0;
   }
-  .brand {
-    font-family: var(--display);
-    font-weight: 600;
-    font-size: 19px;
-    letter-spacing: 0.2px;
-  }
-  .brand .dot { color: var(--accent); }
+  .brand { font-family:var(--display); font-weight:600; font-size:19px; }
+  .brand .dot { color:var(--accent); }
 
-  .lang {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    font-size: 13px;
-    color: var(--ink-dim);
-  }
-  .lang select {
+  .header-right { display:flex; align-items:center; gap:10px; }
+
+  .lang select, .settings-btn {
     appearance: none;
     background: var(--accent-soft);
     color: var(--ink);
@@ -79,8 +64,58 @@
     font-size: 13px;
     font-weight: 500;
   }
+  .settings-btn {
+    cursor: pointer;
+    padding: 5px 10px;
+    font-size: 15px;
+    line-height: 1;
+    transition: background 0.2s;
+  }
+  .settings-btn:hover, .settings-btn.open { background: rgba(224,160,92,0.25); }
 
-  /* ---------- 字幕舞台 ---------- */
+  /* ── 设置面板 ── */
+  #settingsPanel {
+    display: none;
+    padding: 14px 22px 16px;
+    border-bottom: 1px solid var(--line);
+    flex-shrink: 0;
+    gap: 12px;
+    flex-direction: column;
+  }
+  .setting-row { display:flex; align-items:center; gap:14px; }
+  .setting-label { font-size:12px; color:var(--ink-dim); width:60px; flex-shrink:0; }
+
+  .pill-btn {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--line);
+    color: var(--ink-dim);
+    border-radius: 999px;
+    padding: 5px 14px;
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .pill-btn.active { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
+  .pill-btn:disabled { opacity:0.35; cursor:not-allowed; }
+
+  .settings-input {
+    flex: 1;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 7px 12px;
+    font-size: 13px;
+    color: var(--ink);
+    font-family: var(--sans);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .settings-input:focus { border-color: rgba(224,160,92,0.5); }
+  .settings-input::placeholder { color:var(--ghost); }
+
+  /* ── 字幕舞台 ── */
   #stage {
     flex: 1;
     overflow-y: auto;
@@ -92,54 +127,28 @@
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
   }
-  #stage::-webkit-scrollbar { display: none; }
+  #stage::-webkit-scrollbar { display:none; }
 
   .pair { animation: rise 0.35s ease; }
-  @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes rise { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
 
-  .pair .src {
-    font-size: 15px;
-    line-height: 1.5;
-    color: var(--ink-dim);
-    margin-bottom: 6px;
-    font-weight: 400;
-  }
-  .pair .dst {
-    font-family: var(--cjk);
-    font-size: 27px;
-    line-height: 1.45;
-    color: var(--ink);
-    font-weight: 500;
-    letter-spacing: 0.2px;
-  }
+  .pair .src { font-size:15px; line-height:1.5; color:var(--ink-dim); margin-bottom:6px; }
+  .pair .dst { font-family:var(--cjk); font-size:27px; line-height:1.45; color:var(--ink); font-weight:500; letter-spacing:0.2px; }
 
-  /* 历史行：变小、变淡，营造"往上滚动"的纵深 */
-  .pair.history .src { font-size: 13px; color: var(--ghost); }
-  .pair.history .dst { font-size: 19px; color: var(--ink-dim); font-weight: 400; }
+  .pair.history .src { font-size:13px; color:var(--ghost); }
+  .pair.history .dst { font-size:19px; color:var(--ink-dim); font-weight:400; }
 
-  /* 当前正在出的行，琥珀色游标 */
   .pair.live .dst::after {
-    content: "";
-    display: inline-block;
-    width: 3px; height: 1.05em;
-    background: var(--accent);
-    margin-left: 3px;
-    vertical-align: text-bottom;
-    border-radius: 2px;
-    animation: blink 1s step-end infinite;
+    content:""; display:inline-block; width:3px; height:1.05em;
+    background:var(--accent); margin-left:3px; vertical-align:text-bottom;
+    border-radius:2px; animation:blink 1s step-end infinite;
   }
-  @keyframes blink { 50% { opacity: 0; } }
+  @keyframes blink { 50%{opacity:0;} }
 
-  .placeholder {
-    color: var(--ghost);
-    font-size: 15px;
-    text-align: center;
-    line-height: 1.7;
-    margin: auto 0;
-  }
-  .placeholder b { color: var(--ink-dim); font-weight: 500; }
+  .placeholder { color:var(--ghost); font-size:15px; text-align:center; line-height:1.7; margin:auto 0; }
+  .placeholder b { color:var(--ink-dim); font-weight:500; }
 
-  /* ---------- 底部控制 ---------- */
+  /* ── 底部控制 ── */
   footer {
     flex-shrink: 0;
     padding: 14px 22px calc(20px + env(safe-area-inset-bottom));
@@ -148,86 +157,85 @@
     align-items: center;
     gap: 12px;
     border-top: 1px solid var(--line);
-    background: linear-gradient(to top, rgba(10,10,12,0.9), transparent);
+    background: linear-gradient(to top, rgba(10,10,12,.9), transparent);
   }
 
-  .status {
-    height: 18px;
-    font-size: 13px;
-    color: var(--ink-dim);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: color 0.3s;
-  }
-  .status .pulse {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: var(--ink-dim);
-  }
-  .status.on { color: var(--accent); }
-  .status.on .pulse { background: var(--accent); animation: ping 1.4s ease-in-out infinite; }
-  @keyframes ping { 0%,100% { box-shadow: 0 0 0 0 rgba(224,160,92,0.5); } 50% { box-shadow: 0 0 0 7px rgba(224,160,92,0); } }
+  .status { height:18px; font-size:13px; color:var(--ink-dim); display:flex; align-items:center; gap:8px; transition:color .3s; }
+  .status .pulse { width:8px; height:8px; border-radius:50%; background:var(--ink-dim); }
+  .status.on { color:var(--accent); }
+  .status.on .pulse { background:var(--accent); animation:ping 1.4s ease-in-out infinite; }
+  @keyframes ping { 0%,100%{box-shadow:0 0 0 0 rgba(224,160,92,.5);} 50%{box-shadow:0 0 0 7px rgba(224,160,92,0);} }
 
-  .controls { display: flex; align-items: center; gap: 18px; }
+  .controls { display:flex; align-items:center; gap:18px; }
 
   #toggle {
-    width: 78px; height: 78px;
-    border-radius: 50%;
-    border: none;
-    background: var(--accent);
-    color: #1a120a;
-    display: grid;
-    place-items: center;
-    cursor: pointer;
-    box-shadow: 0 8px 30px rgba(224,160,92,0.35);
-    transition: transform 0.15s, background 0.25s, box-shadow 0.25s;
+    width:78px; height:78px; border-radius:50%; border:none;
+    background:var(--accent); color:#1a120a;
+    display:grid; place-items:center; cursor:pointer;
+    box-shadow:0 8px 30px rgba(224,160,92,.35);
+    transition:transform .15s, background .25s, box-shadow .25s;
   }
-  #toggle:active { transform: scale(0.93); }
-  #toggle.running {
-    background: #2a2722;
-    color: var(--accent);
-    box-shadow: 0 0 0 1px var(--line);
-  }
-  #toggle svg { width: 30px; height: 30px; }
+  #toggle:active { transform:scale(.93); }
+  #toggle.running { background:#2a2722; color:var(--accent); box-shadow:0 0 0 1px var(--line); }
+  #toggle svg { width:30px; height:30px; }
 
-  .audio-toggle {
-    background: none;
-    border: 1px solid var(--line);
-    color: var(--ink-dim);
-    border-radius: 999px;
-    padding: 9px 14px;
-    font-size: 12px;
-    font-family: var(--sans);
-    cursor: pointer;
-    transition: color 0.2s, border-color 0.2s;
-  }
-  .audio-toggle.on { color: var(--accent); border-color: var(--accent); }
+  .hint { font-size:11px; color:var(--ghost); text-align:center; max-width:320px; line-height:1.5; }
 
-  .hint {
-    font-size: 11px;
-    color: var(--ghost);
-    text-align: center;
-    max-width: 320px;
-    line-height: 1.5;
+  /* Provider 标签 */
+  .provider-badge {
+    font-size:10px; color:var(--ink-dim); background:var(--accent-soft);
+    border:1px solid var(--line); border-radius:999px; padding:2px 8px;
+    font-weight:500; letter-spacing:0.3px;
   }
 </style>
 </head>
 
 <body>
   <header>
-    <div class="brand">同传字幕<span class="dot">.</span></div>
-    <label class="lang">
-      译为
-      <select id="target">
-        <option value="zh" selected>中文</option>
-        <option value="en">English</option>
-        <option value="ja">日本語</option>
-        <option value="ko">한국어</option>
-        <option value="es">Español</option>
-        <option value="fr">Français</option>
-      </select>
-    </label>
+    <div class="brand">Sotto<span class="dot">.</span></div>
+    <div class="header-right">
+      <label class="lang" style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-dim);">
+        译为
+        <select id="target">
+          <option value="zh" selected>中文</option>
+          <option value="en">English</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+        </select>
+      </label>
+      <button class="settings-btn" id="settingsBtn" aria-label="设置">⚙</button>
+    </div>
   </header>
+
+  <!-- 设置面板 -->
+  <div id="settingsPanel">
+    <div class="setting-row">
+      <span class="setting-label">Provider</span>
+      <div style="display:flex;gap:6px;">
+        <button class="pill-btn" id="provBtn-aliyun">阿里云</button>
+        <button class="pill-btn" id="provBtn-openai" disabled title="Phase B 即将支持">OpenAI</button>
+      </div>
+    </div>
+    <div class="setting-row" id="serverRow">
+      <span class="setting-label">Server URL</span>
+      <input id="serverUrlInput" class="settings-input" type="text"
+        placeholder="wss://your-server.com" />
+    </div>
+    <div class="setting-row">
+      <span class="setting-label">源语言</span>
+      <select id="source" class="settings-input" style="flex:none;width:auto;padding:7px 12px;">
+        <option value="en" selected>英语</option>
+        <option value="zh">中文</option>
+        <option value="ja">日语</option>
+        <option value="ko">韩语</option>
+        <option value="fr">法语</option>
+        <option value="de">德语</option>
+        <option value="ru">俄语</option>
+      </select>
+    </div>
+  </div>
 
   <div id="stage">
     <div class="placeholder" id="placeholder">
@@ -239,239 +247,400 @@
   <footer>
     <div class="status" id="status"><span class="pulse"></span><span id="statusText">待机</span></div>
     <div class="controls">
-      <button class="audio-toggle" id="audioToggle">🔇 译文语音</button>
+      <span id="providerBadge" class="provider-badge">阿里云</span>
       <button id="toggle" aria-label="开始/停止">
-        <!-- mic icon -->
         <svg id="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
           <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
           <line x1="12" y1="19" x2="12" y2="22"/>
         </svg>
       </button>
-      <!-- 占位让按钮居中对称 -->
-      <span style="width:92px"></span>
+      <span style="width:72px"></span>
     </div>
-    <div class="hint" id="hint">约 $0.05 / 分钟 · 翻译时屏幕保持常亮，停止后恢复</div>
+    <div class="hint">约 $0.02–0.05 / 分钟 · 翻译时屏幕保持常亮</div>
   </footer>
-
-  <audio id="translatedAudio" autoplay></audio>
 
 <script>
 (() => {
-  "use strict";
+'use strict';
 
-  const stage = document.getElementById("stage");
-  const placeholder = document.getElementById("placeholder");
-  const toggleBtn = document.getElementById("toggle");
-  const icon = document.getElementById("icon");
-  const statusEl = document.getElementById("status");
-  const statusText = document.getElementById("statusText");
-  const targetSel = document.getElementById("target");
-  const audioToggle = document.getElementById("audioToggle");
-  const translatedAudio = document.getElementById("translatedAudio");
-  const hint = document.getElementById("hint");
+// ══════════════════════════════════════════════════════════════════════════════
+// Provider 接口约定（注释即文档）
+// ──────────────────────────────────────────────────────────────────────────────
+// 每个 Provider 需要：
+//   属性（由外部赋值）：
+//     onSrcUpdate(text)   原文更新（替换整行，非追加）
+//     onDstUpdate(text)   译文更新（替换整行，非追加）
+//     onCommit()          提交当前句子到历史，清空 live 行
+//     onStatus(s)         状态：'idle'|'connecting'|'listening'|'translating'
+//     onError(msg)        发生错误
+//   方法：
+//     async start()       开始采音 + 建连（会 throw 如果失败）
+//     stop()              停止一切
+// ══════════════════════════════════════════════════════════════════════════════
 
-  let pc = null;
-  let localStream = null;
-  let dataChannel = null;
-  let wakeLock = null;
-  let running = false;
+// ── Phase A: 阿里云 DashScope Provider ────────────────────────────────────────
+class AliyunProvider {
+  constructor({ serverUrl, targetLang = 'zh', sourceLang = 'en' }) {
+    this.serverUrl  = serverUrl;
+    this.targetLang = targetLang;
+    this.sourceLang = sourceLang;
+    this.ws         = null;
+    this.audioCtx   = null;
+    this.stream     = null;
+    this.processor  = null;
 
-  // 当前正在生成的一行（live）
-  let liveEl = null, liveSrc = null, liveDst = null;
-  let srcBuf = "", dstBuf = "";
-
-  const MIC_ICON = `<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/>`;
-  const STOP_ICON = `<rect x="6" y="6" width="12" height="12" rx="2"/>`;
-
-  function setStatus(text, on) {
-    statusText.textContent = text;
-    statusEl.classList.toggle("on", !!on);
+    this.onSrcUpdate = () => {};
+    this.onDstUpdate = () => {};
+    this.onCommit    = () => {};
+    this.onStatus    = () => {};
+    this.onError     = () => {};
   }
 
-  // ---------- 字幕渲染 ----------
-  function ensureLive() {
-    if (liveEl) return;
-    placeholder.style.display = "none";
-    liveEl = document.createElement("div");
-    liveEl.className = "pair live";
-    liveSrc = document.createElement("div");
-    liveSrc.className = "src";
-    liveDst = document.createElement("div");
-    liveDst.className = "dst";
-    liveEl.appendChild(liveSrc);
-    liveEl.appendChild(liveDst);
-    stage.appendChild(liveEl);
+  async start() {
+    if (!this.serverUrl) throw new Error('请在设置中填写 Server URL');
+
+    // 1. 打开麦克风 —— 关掉所有 DSP，获取最原始的声音
+    this.stream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+    });
+
+    // 2. 以 16kHz 建立 AudioContext（DashScope 要求 16kHz PCM16）
+    this.audioCtx = new AudioContext({ sampleRate: 16000 });
+    if (Math.abs(this.audioCtx.sampleRate - 16000) > 200) {
+      console.warn(`AudioContext 采样率为 ${this.audioCtx.sampleRate}Hz（非 16kHz），识别质量可能受影响`);
+    }
+
+    const source = this.audioCtx.createMediaStreamSource(this.stream);
+
+    // ScriptProcessor：每 1600 帧（100ms@16kHz）触发一次
+    // 注意：ScriptProcessor 已被标记废弃，Phase B 迁移至 AudioWorklet
+    this.processor = this.audioCtx.createScriptProcessor(1600, 1, 1);
+    this.processor.onaudioprocess = (e) => {
+      const float32 = e.inputBuffer.getChannelData(0);
+      const pcm16   = this._float32ToInt16(float32);
+      if (this.ws?.readyState === WebSocket.OPEN)
+        this.ws.send(pcm16.buffer);
+    };
+    source.connect(this.processor);
+    this.processor.connect(this.audioCtx.destination);  // 必须接 destination 才会触发
+
+    // 3. 连接到代理服务器
+    return new Promise((resolve, reject) => {
+      const wsUrl = this.serverUrl.replace(/\/$/, '');
+      let settled = false;
+      const settle = (fn, val) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        fn(val);
+      };
+      const timer = setTimeout(
+        () => settle(reject, new Error('服务器连接超时（15s），请检查 Server URL 和网络')),
+        15000
+      );
+
+      this.ws = new WebSocket(wsUrl);
+      this.ws.binaryType = 'arraybuffer';
+
+      this.ws.onopen = () => {
+        this.ws.send(JSON.stringify({
+          type:       'config',
+          targetLang: this.targetLang,
+          sourceLang: this.sourceLang,
+        }));
+        this.onStatus('connecting');
+      };
+
+      this.ws.onmessage = ({ data }) => {
+        let msg;
+        try { msg = JSON.parse(data); } catch { return; }
+
+        switch (msg.type) {
+          case 'ready':
+            // 服务器已和 DashScope 握手完成，可以开口说话了
+            settle(resolve);
+            this.onStatus('listening');
+            break;
+
+          case 'src.update':
+            // 原文 interim（stash）：随着识别推进，文字会逐步稳定
+            if (msg.text) {
+              this.onSrcUpdate(msg.text);
+              this.onStatus('translating');
+            }
+            break;
+
+          case 'src.done':
+            // 原文 final：本句识别结束，用最终版本替换
+            if (msg.text) this.onSrcUpdate(msg.text);
+            break;
+
+          case 'dst.done':
+            // 译文完成：显示 800ms 后 commit，给用户时间读一眼完整的对
+            if (msg.text) {
+              this.onDstUpdate(msg.text);
+              setTimeout(() => {
+                this.onCommit();
+                this.onStatus('listening');
+              }, 800);
+            }
+            break;
+
+          case 'turn.done':
+            this.onStatus('listening');
+            break;
+
+          case 'error':
+            settle(reject, new Error(msg.message || '服务器错误'));
+            this.onError(msg.message || '服务器错误');
+            break;
+        }
+      };
+
+      this.ws.onerror = () => settle(reject, new Error('WebSocket 连接失败，请检查 Server URL'));
+      this.ws.onclose = () => { if (this.onStatus) this.onStatus('idle'); };
+    });
   }
 
-  function renderLive() {
-    ensureLive();
-    liveSrc.textContent = srcBuf;
-    liveDst.textContent = dstBuf;
-    stage.scrollTop = stage.scrollHeight;
+  stop() {
+    this.processor?.disconnect();
+    this.audioCtx?.close().catch(() => {});
+    this.stream?.getTracks().forEach(t => t.stop());
+    this.ws?.close();
+    this.ws = this.processor = this.audioCtx = this.stream = null;
   }
 
-  // 一句翻译结束：把当前 live 行定格成历史行，清空缓冲
-  function commitLine() {
-    if (liveEl && (srcBuf || dstBuf)) {
-      liveEl.classList.remove("live");
-      liveEl.classList.add("history");
-    } else if (liveEl) {
+  _float32ToInt16(float32) {
+    const int16 = new Int16Array(float32.length);
+    for (let i = 0; i < float32.length; i++) {
+      const s   = Math.max(-1, Math.min(1, float32[i]));
+      int16[i]  = s < 0 ? s * 0x8000 : s * 0x7FFF;
+    }
+    return int16;
+  }
+}
+
+// ── Phase B: OpenAI WebRTC Provider（占位，Phase B 实现）─────────────────────
+class OpenAIProvider {
+  constructor(_config) {
+    this.onSrcUpdate = () => {};
+    this.onDstUpdate = () => {};
+    this.onCommit    = () => {};
+    this.onStatus    = () => {};
+    this.onError     = () => {};
+  }
+  async start() {
+    throw new Error('OpenAI Provider 将在 Phase B 实现，敬请期待');
+  }
+  stop() {}
+}
+
+// ── Provider 工厂 ──────────────────────────────────────────────────────────────
+function createProvider(type, config) {
+  if (type === 'aliyun') return new AliyunProvider(config);
+  if (type === 'openai') return new OpenAIProvider(config);
+  throw new Error('未知 Provider: ' + type);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// UI 状态
+// ══════════════════════════════════════════════════════════════════════════════
+const stage       = document.getElementById('stage');
+const placeholder = document.getElementById('placeholder');
+const toggleBtn   = document.getElementById('toggle');
+const icon        = document.getElementById('icon');
+const statusEl    = document.getElementById('status');
+const statusText  = document.getElementById('statusText');
+const targetSel   = document.getElementById('target');
+const sourceSel   = document.getElementById('source');
+const settingsBtn = document.getElementById('settingsBtn');
+const settingsPanel = document.getElementById('settingsPanel');
+const serverInput = document.getElementById('serverUrlInput');
+const badge       = document.getElementById('providerBadge');
+
+let running    = false;
+let provider   = null;
+let wakeLock   = null;
+
+// 持久化设置
+let providerType = localStorage.getItem('sotto_provider')    || 'aliyun';
+let serverUrl    = localStorage.getItem('sotto_server_url')  || '';
+let targetLang   = localStorage.getItem('sotto_target_lang') || 'zh';
+let sourceLang   = localStorage.getItem('sotto_source_lang') || 'en';
+
+// ── 字幕 DOM ──────────────────────────────────────────────────────────────────
+let liveEl = null, liveSrc = null, liveDst = null;
+
+const MIC_ICON  = `<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/>`;
+const STOP_ICON = `<rect x="6" y="6" width="12" height="12" rx="2"/>`;
+
+function ensureLive() {
+  if (liveEl) return;
+  placeholder.style.display = 'none';
+  liveEl  = document.createElement('div');
+  liveSrc = document.createElement('div');
+  liveDst = document.createElement('div');
+  liveEl.className  = 'pair live';
+  liveSrc.className = 'src';
+  liveDst.className = 'dst';
+  liveEl.appendChild(liveSrc);
+  liveEl.appendChild(liveDst);
+  stage.appendChild(liveEl);
+}
+
+function commitLine() {
+  if (liveEl) {
+    if (liveSrc?.textContent || liveDst?.textContent) {
+      liveEl.classList.remove('live');
+      liveEl.classList.add('history');
+    } else {
       liveEl.remove();
     }
-    liveEl = liveSrc = liveDst = null;
-    srcBuf = dstBuf = "";
+  }
+  liveEl = liveSrc = liveDst = null;
+  // 只保留最近 40 条历史
+  while (stage.querySelectorAll('.pair').length > 40)
+    stage.querySelector('.pair').remove();
+}
 
-    // 控制 DOM 数量，最多保留 40 行历史
-    while (stage.querySelectorAll(".pair").length > 40) {
-      stage.querySelector(".pair").remove();
+function setStatus(text, on) {
+  statusText.textContent = text;
+  statusEl.classList.toggle('on', !!on);
+}
+
+function showError(msg) {
+  placeholder.style.display = '';
+  placeholder.innerHTML = `⚠️ ${msg}`;
+}
+
+// ── 屏幕常亮 ──────────────────────────────────────────────────────────────────
+async function acquireWakeLock() {
+  try {
+    if ('wakeLock' in navigator) {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => { wakeLock = null; });
     }
+  } catch {}
+}
+function releaseWakeLock() {
+  wakeLock?.release().catch(() => {});
+  wakeLock = null;
+}
+document.addEventListener('visibilitychange', () => {
+  if (running && document.visibilityState === 'visible' && !wakeLock)
+    acquireWakeLock();
+});
+
+// ── 开始 / 停止 ───────────────────────────────────────────────────────────────
+async function start() {
+  const config = {
+    serverUrl,
+    targetLang: targetSel.value,
+    sourceLang: sourceSel.value,
+  };
+
+  provider = createProvider(providerType, config);
+
+  // 绑定 Provider 回调 → 字幕 UI
+  provider.onSrcUpdate = (text) => {
+    ensureLive();
+    liveSrc.textContent = text;
+    stage.scrollTop = stage.scrollHeight;
+  };
+  provider.onDstUpdate = (text) => {
+    ensureLive();
+    liveDst.textContent = text;
+    stage.scrollTop = stage.scrollHeight;
+  };
+  provider.onCommit = commitLine;
+  provider.onStatus = (s) => {
+    const map = { idle:'待机', connecting:'连接中…', listening:'聆听中…', translating:'翻译中…' };
+    setStatus(map[s] || s, s !== 'idle');
+  };
+  provider.onError = (m) => {
+    showError(m);
+    if (running) stop();
+  };
+
+  try {
+    setStatus('连接中…', true);
+    await provider.start();
+    await acquireWakeLock();
+
+    running = true;
+    icon.innerHTML = STOP_ICON;
+    toggleBtn.classList.add('running');
+    targetSel.disabled = true;
+    sourceSel.disabled = true;
+    settingsBtn.disabled = true;
+  } catch (err) {
+    console.error(err);
+    showError(err.message || String(err));
+    setStatus('待机', false);
+    provider?.stop();
+    provider = null;
   }
+}
 
-  // ---------- 事件处理 ----------
-  function onEvent(raw) {
-    let evt;
-    try { evt = JSON.parse(raw); } catch { return; }
-    // 调试用：在浏览器控制台能看到所有事件类型
-    console.log("[oai]", evt.type, evt);
+function stop() {
+  running = false;
+  provider?.stop();
+  provider = null;
+  releaseWakeLock();
+  commitLine();
+  icon.innerHTML = MIC_ICON;
+  toggleBtn.classList.remove('running');
+  targetSel.disabled = false;
+  sourceSel.disabled = false;
+  settingsBtn.disabled = false;
+  setStatus('待机', false);
+}
 
-    switch (evt.type) {
-      case "session.input_transcript.delta":   // 原文
-        srcBuf += evt.delta || "";
-        setStatus("翻译中…", true);
-        renderLive();
-        break;
-      case "session.output_transcript.delta":  // 译文
-        dstBuf += evt.delta || "";
-        setStatus("翻译中…", true);
-        renderLive();
-        break;
-      case "session.output_transcript.done":
-      case "session.output_transcript.completed":
-        commitLine();
-        setStatus("聆听中…", true);
-        break;
-      case "error":
-        showError(evt.error?.message || "发生错误");
-        break;
-    }
-  }
+toggleBtn.addEventListener('click', () => running ? stop() : start());
 
-  function showError(msg) {
-    placeholder.style.display = "";
-    placeholder.innerHTML = "⚠️ " + msg;
-  }
+// ── 设置面板 ──────────────────────────────────────────────────────────────────
+function setProvider(type) {
+  providerType = type;
+  localStorage.setItem('sotto_provider', type);
+  document.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('provBtn-' + type)?.classList.add('active');
+  document.getElementById('serverRow').style.display = type === 'aliyun' ? 'flex' : 'none';
+  badge.textContent = type === 'aliyun' ? '阿里云' : 'OpenAI';
+}
 
-  // ---------- 屏幕常亮 ----------
-  async function acquireWakeLock() {
-    try {
-      if ("wakeLock" in navigator) {
-        wakeLock = await navigator.wakeLock.request("screen");
-        wakeLock.addEventListener("release", () => { wakeLock = null; });
-      }
-    } catch (e) { /* 低电量等情况会失败，忽略即可 */ }
-  }
-  function releaseWakeLock() {
-    try { wakeLock && wakeLock.release(); } catch {}
-    wakeLock = null;
-  }
-  // 切回前台时，如果还在翻译就重新申请（锁会在页面隐藏时自动释放）
-  document.addEventListener("visibilitychange", () => {
-    if (running && document.visibilityState === "visible" && !wakeLock) {
-      acquireWakeLock();
-    }
-  });
+settingsBtn.addEventListener('click', () => {
+  const open = settingsPanel.style.display !== 'flex';
+  settingsPanel.style.display = open ? 'flex' : 'none';
+  settingsBtn.classList.toggle('open', open);
+});
 
-  // ---------- 启停 ----------
-  async function start() {
-    setStatus("连接中…", true);
-    try {
-      // 1. 找后端要短期密钥
-      const r = await fetch("/session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ targetLanguage: targetSel.value }),
-      });
-      const data = await r.json();
-      const clientSecret = data.value;
-      if (!clientSecret) throw new Error(data.error || "拿不到密钥，检查后端和 API key");
+document.getElementById('provBtn-aliyun').addEventListener('click', () => setProvider('aliyun'));
+document.getElementById('provBtn-openai').addEventListener('click', () => setProvider('openai'));
 
-      // 2. 打开麦克风（关闭浏览器的回声消除/降噪，尽量拿到原始外放声音）
-      localStream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
-      });
+serverInput.addEventListener('input', (e) => {
+  serverUrl = e.target.value.trim();
+  localStorage.setItem('sotto_server_url', serverUrl);
+});
 
-      // 3. 建立 WebRTC 连接
-      pc = new RTCPeerConnection();
-      pc.addTrack(localStream.getAudioTracks()[0], localStream);
+targetSel.addEventListener('change', (e) => {
+  targetLang = e.target.value;
+  localStorage.setItem('sotto_target_lang', targetLang);
+});
 
-      // 收到的是"翻译后的语音"，默认静音（我们只要字幕）
-      pc.ontrack = (e) => { translatedAudio.srcObject = e.streams[0]; };
-      translatedAudio.muted = !audioToggle.classList.contains("on");
+sourceSel.addEventListener('change', (e) => {
+  sourceLang = e.target.value;
+  localStorage.setItem('sotto_source_lang', sourceLang);
+});
 
-      // 4. 数据通道：翻译文字从这里流回来
-      dataChannel = pc.createDataChannel("oai-events");
-      dataChannel.onmessage = (e) => onEvent(e.data);
+// ── 初始化 ────────────────────────────────────────────────────────────────────
+serverInput.value = serverUrl;
+targetSel.value   = targetLang;
+sourceSel.value   = sourceLang;
+setProvider(providerType);
 
-      // 5. SDP 握手
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
+window.addEventListener('pagehide', () => { if (running) { provider?.stop(); releaseWakeLock(); } });
 
-      const sdpResp = await fetch(
-        "https://api.openai.com/v1/realtime/translations/calls",
-        {
-          method: "POST",
-          headers: { Authorization: `Bearer ${clientSecret}`, "Content-Type": "application/sdp" },
-          body: offer.sdp,
-        }
-      );
-      if (!sdpResp.ok) throw new Error("连接失败：" + (await sdpResp.text()));
-      await pc.setRemoteDescription({ type: "answer", sdp: await sdpResp.text() });
-
-      // 6. 翻译开始 → 保持屏幕常亮
-      await acquireWakeLock();
-
-      running = true;
-      icon.innerHTML = STOP_ICON;
-      toggleBtn.classList.add("running");
-      targetSel.disabled = true;
-      setStatus("聆听中…", true);
-    } catch (err) {
-      console.error(err);
-      showError(err.message || String(err));
-      setStatus("待机", false);
-      cleanup();
-    }
-  }
-
-  function cleanup() {
-    releaseWakeLock();                          // 停止 → 解除常亮，恢复省电
-    try { dataChannel && dataChannel.close(); } catch {}
-    try { pc && pc.close(); } catch {}
-    if (localStream) localStream.getTracks().forEach((t) => t.stop());
-    pc = dataChannel = localStream = null;
-  }
-
-  function stop() {
-    running = false;
-    cleanup();
-    commitLine();
-    icon.innerHTML = MIC_ICON;
-    toggleBtn.classList.remove("running");
-    targetSel.disabled = false;
-    setStatus("待机", false);
-  }
-
-  toggleBtn.addEventListener("click", () => (running ? stop() : start()));
-
-  audioToggle.addEventListener("click", () => {
-    const on = audioToggle.classList.toggle("on");
-    audioToggle.textContent = on ? "🔊 译文语音" : "🔇 译文语音";
-    translatedAudio.muted = !on;
-  });
-
-  // 页面关闭/刷新时确保解除常亮
-  window.addEventListener("pagehide", () => { if (running) cleanup(); });
 })();
 </script>
 </body>
